@@ -1,0 +1,20 @@
+{
+  "name": "care-alert-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Care Alert Notification Service — Full Stack Take-Home Assignment",
+  "workspaces": [
+    "packages/server",
+    "packages/web"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=packages/server",
+    "dev:web": "npm run dev --workspace=packages/web",
+    "build:server": "npm run build --workspace=packages/server",
+    "build:web": "npm run build --workspace=packages/web",
+    "test": "npm run test --workspace=packages/server",
+    "db:push": "npm run db:push --workspace=packages/server",
+    "db:seed": "npm run db:seed --workspace=packages/server",
+    "db:studio": "npm run db:studio --workspace=packages/server"
+  }
+}
