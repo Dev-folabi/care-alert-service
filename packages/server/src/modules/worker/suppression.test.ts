@@ -1,22 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { checkSuppression, resetSuppressionCounter } from "./suppression.js";
-
-// ────────────────────────────────────────────────────────
-// What we're testing and why:
-//
-// The suppression rule prevents alert fatigue by batching
-// repeated low-severity alerts. Getting this wrong could
-// either: (a) spam clinicians with noise, or (b) suppress
-// alerts that should have been delivered.
-//
-// We test the pure logic:
-// 1. HIGH severity → ALWAYS activate (never suppress critical alerts)
-// 2. MEDIUM severity → ALWAYS activate
-// 3. LOW severity, count <= threshold → activate
-// 4. LOW severity, count > threshold → suppress
-// 5. Counter resets after window expires
-// 6. Different patients have independent counters
-// ────────────────────────────────────────────────────────
+import { checkSuppression, resetSuppressionCounter } from "./suppression";
 
 const TEST_PATIENT_1 = "PT-SUPPRESS-TEST-1";
 const TEST_PATIENT_2 = "PT-SUPPRESS-TEST-2";
@@ -30,7 +13,6 @@ describe("Suppression Logic", () => {
   afterAll(async () => {
     await resetSuppressionCounter(TEST_PATIENT_1);
     await resetSuppressionCounter(TEST_PATIENT_2);
-    // Don't quit Redis — it's shared across test suites
   });
 
   describe("HIGH severity", () => {

@@ -1,8 +1,13 @@
-import { getPrisma } from "../../db/client.js";
+import { getPrisma } from "../../db/client";
 import { Prisma } from "@prisma/client";
-import { getCached, setCache, buildPatientCacheKey, buildAllAlertsCacheKey } from "./alert.cache.js";
+import {
+  getCached,
+  setCache,
+  buildPatientCacheKey,
+  buildAllAlertsCacheKey,
+} from "./alert.cache";
 
-// ── Types ──
+// Types
 
 export interface AlertQueryFilters {
   patientId?: string;
@@ -20,7 +25,7 @@ export interface PaginatedAlerts {
   totalPages: number;
 }
 
-// ── Helpers ──
+// Helpers
 
 function buildWhereClause(filters: AlertQueryFilters) {
   const where: Prisma.AlertWhereInput = {};
@@ -40,17 +45,11 @@ function buildWhereClause(filters: AlertQueryFilters) {
   return where;
 }
 
-// ── Service ──
+// Service
 
-/**
- * Get all alerts with optional filters (clinician view).
- * Results are cached with a hybrid strategy:
- *   - Event-driven invalidation when new alerts are processed
- *   - 60s TTL as a safety net
- */
-export async function getAllAlerts(
-  filters: AlertQueryFilters
-): Promise<PaginatedAlerts> {
+export const getAllAlerts = async (
+  filters: AlertQueryFilters,
+): Promise<PaginatedAlerts> => {
   const { page, limit } = filters;
   const skip = (page - 1) * limit;
   const where = buildWhereClause(filters);
@@ -89,17 +88,12 @@ export async function getAllAlerts(
   await setCache(cacheKey, result);
 
   return result;
-}
+};
 
-/**
- * Get alerts for a specific patient (patient view).
- * Only returns alerts belonging to the given patientId.
- * Cached with the same hybrid strategy.
- */
-export async function getMyAlerts(
+export const getMyAlerts = async (
   patientId: string,
-  filters: Omit<AlertQueryFilters, "patientId">
-): Promise<PaginatedAlerts> {
+  filters: Omit<AlertQueryFilters, "patientId">,
+): Promise<PaginatedAlerts> => {
   const { page, limit } = filters;
   const skip = (page - 1) * limit;
 
@@ -145,21 +139,14 @@ export async function getMyAlerts(
   await setCache(cacheKey, result);
 
   return result;
-}
+};
 
-/**
- * Get a single alert by ID.
- * Enforces access control: patients can only view their own alerts.
- *
- * Access control is enforced at the API layer (not just UI):
- *   - If patient role and alert belongs to another patient → 403
- */
-export async function getAlertById(
+export const getAlertById = async (
   id: string,
   userId: string,
   role: string,
-  patientId: string | null
-) {
+  patientId: string | null,
+) => {
   const prisma = getPrisma();
 
   const alert = await prisma.alert.findUnique({ where: { id } });
@@ -168,13 +155,12 @@ export async function getAlertById(
     throw Object.assign(new Error("Alert not found"), { status: 404 });
   }
 
-  // Access control: patient can only see their own alerts
   if (role === "PATIENT" && alert.patientId !== patientId) {
     throw Object.assign(
       new Error("You are not authorized to view this alert"),
-      { status: 403 }
+      { status: 403 },
     );
   }
 
   return alert;
-}
+};

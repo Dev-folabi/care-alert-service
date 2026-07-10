@@ -1,23 +1,5 @@
-import { getRedis } from "../../config/redis.js";
-import { env } from "../../config/env.js";
-
-/**
- * Suppression rule for low-severity alerts.
- *
- * Rule: If a patient has more than SUPPRESSION_THRESHOLD low-severity alerts
- * within a SUPPRESSION_WINDOW_MS sliding window, suppress subsequent ones.
- *
- * MEDIUM and HIGH severity alerts are NEVER suppressed — they could be
- * clinically critical.
- *
- * Implementation:
- *   - Redis key: suppress:{patientId}
- *   - On each LOW alert: INCR the counter
- *   - On first increment: set EXPIRE to the window duration
- *   - If counter > threshold: suppress (return action: 'suppress')
- *   - If counter <= threshold: activate (return action: 'activate')
- *   - When TTL expires, the window resets automatically
- */
+import { getRedis } from "../../config/redis";
+import { env } from "../../config/env";
 
 const SUPPRESSION_PREFIX = "suppress:";
 
@@ -31,13 +13,12 @@ export interface SuppressionResult {
 }
 
 /**
- * Pure suppression check — depends on Redis for the counter
- * but the logic is isolated and testable.
+ * Pure suppression check, depends on Redis for the counter
  */
-export async function checkSuppression(
+export const checkSuppression = async (
   patientId: string,
-  severity: string
-): Promise<SuppressionResult> {
+  severity: string,
+): Promise<SuppressionResult> => {
   const threshold = env.SUPPRESSION_THRESHOLD;
   const windowMs = env.SUPPRESSION_WINDOW_MS;
 
@@ -72,16 +53,15 @@ export async function checkSuppression(
     threshold,
     windowMs,
   };
-}
+};
 
 /**
  * Reset the suppression counter for a patient.
- * Useful for testing or manual admin actions.
  */
-export async function resetSuppressionCounter(
-  patientId: string
-): Promise<void> {
+export const resetSuppressionCounter = async (
+  patientId: string,
+): Promise<void> => {
   const redis = getRedis();
   const key = `${SUPPRESSION_PREFIX}${patientId}`;
   await redis.del(key);
-}
+};

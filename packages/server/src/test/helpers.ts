@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 /**
  * Create mock Express req/res/next for testing middleware.
  */
-export function createMockReq(overrides: Partial<Request> = {} as any) {
+export const createMockReq = (overrides: Partial<Request> = {} as any) => {
   return {
     headers: {},
     body: {},
@@ -12,9 +12,9 @@ export function createMockReq(overrides: Partial<Request> = {} as any) {
     user: undefined,
     ...overrides,
   } as any;
-}
+};
 
-export function createMockRes() {
+export const createMockRes = () => {
   const res = {
     statusCode: 200,
     body: null,
@@ -32,9 +32,12 @@ export function createMockRes() {
     },
   } as any;
   return res as Response;
-}
+};
 
-export function createMockNext(): NextFunction & { called: boolean; calledWith?: any } {
+export const createMockNext = (): NextFunction & {
+  called: boolean;
+  calledWith?: any;
+} => {
   const next = ((err?: any) => {
     (next as any).called = true;
     (next as any).calledWith = err;
@@ -42,4 +45,4 @@ export function createMockNext(): NextFunction & { called: boolean; calledWith?:
   next.called = false;
   next.calledWith = undefined;
   return next;
-}
+};

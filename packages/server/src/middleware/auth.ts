@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken, JwtPayload } from "../modules/auth/auth.service.js";
+import { verifyToken, JwtPayload } from "../modules/auth/auth.service";
 
-// Extend Express Request to carry our JWT payload
+// Extend Express Request to carry JWT payload
 declare global {
   namespace Express {
     interface Request {
@@ -19,7 +19,9 @@ export function authGuard(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Missing or invalid Authorization header" });
+    res
+      .status(401)
+      .json({ success: false, message: "Authentication required", data: null });
     return;
   }
 
@@ -29,8 +31,14 @@ export function authGuard(req: Request, res: Response, next: NextFunction) {
     const payload = verifyToken(token);
     req.user = payload;
     next();
-  } catch {
-    res.status(401).json({ error: "Invalid or expired token" });
+  } catch (err) {
+    res
+      .status(401)
+      .json({
+        success: false,
+        message: "Invalid or expired token",
+        data: null,
+      });
     return;
   }
 }

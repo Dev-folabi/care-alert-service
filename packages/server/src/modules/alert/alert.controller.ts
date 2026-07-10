@@ -3,13 +3,12 @@ import * as alertService from "./alert.service.js";
 
 /**
  * GET /api/alerts
- * Clinician-only: list all alerts with optional filters.
  */
-export async function listAlerts(
+export const listAlerts = async (
   req: Request,
   res: Response,
-  next: NextFunction
-) {
+  next: NextFunction,
+) => {
   try {
     const filters: alertService.AlertQueryFilters = {
       patientId: req.query.patientId as string | undefined,
@@ -20,27 +19,33 @@ export async function listAlerts(
     };
 
     const result = await alertService.getAllAlerts(filters);
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: "Alerts fetched successfully",
+      data: result,
+    });
   } catch (err) {
     next(err);
   }
-}
+};
 
 /**
  * GET /api/alerts/mine
- * Patient-only: list alerts belonging to the authenticated patient.
- * patientId is taken from the JWT token (req.user), not from query params.
  */
-export async function listMyAlerts(
+export const listMyAlerts = async (
   req: Request,
   res: Response,
-  next: NextFunction
-) {
+  next: NextFunction,
+) => {
   try {
     const patientId = req.user!.patientId;
 
     if (!patientId) {
-      res.status(400).json({ error: "No patientId associated with this account" });
+      res.status(400).json({
+        success: false,
+        message: "No patientId associated with this account",
+        data: null,
+      });
       return;
     }
 
@@ -52,29 +57,35 @@ export async function listMyAlerts(
     };
 
     const result = await alertService.getMyAlerts(patientId, filters);
-    res.status(200).json(result);
+    res.status(200).json({
+      success: true,
+      message: "Alerts fetched successfully",
+      data: result,
+    });
   } catch (err) {
     next(err);
   }
-}
+};
 
 /**
  * GET /api/alerts/:id
- * Both roles: get a single alert by ID.
- * Patients can only view their own alerts (enforced in service layer).
  */
-export async function getAlert(
+export const getAlert = async (
   req: Request,
   res: Response,
-  next: NextFunction
-) {
+  next: NextFunction,
+) => {
   try {
     const id = req.params.id as string;
     const { userId, role, patientId } = req.user!;
 
     const alert = await alertService.getAlertById(id, userId, role, patientId);
-    res.status(200).json(alert);
+    res.status(200).json({
+      success: true,
+      message: "Alert fetched successfully",
+      data: alert,
+    });
   } catch (err) {
     next(err);
   }
-}
+};

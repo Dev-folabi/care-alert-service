@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { getRedisConnectionOptions } from "./redis.js";
+import { getRedisConnectionOptions } from "./redis";
 
 let alertQueueInstance: Queue | null = null;
 

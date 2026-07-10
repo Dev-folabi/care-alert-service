@@ -1,7 +1,7 @@
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getPrisma } from "../../db/client.js";
-import { env } from "../../config/env.js";
+import { getPrisma } from "../../db/client";
+import { env } from "../../config/env";
 import { Role } from "@prisma/client";
 
 export interface JwtPayload {
@@ -39,22 +39,20 @@ function toUserResponse(user: {
   return safe;
 }
 
-export async function register(
+export const register = async (
   email: string,
   password: string,
   name: string,
   role: string,
-  patientId?: string
-): Promise<AuthResponse> {
+  patientId?: string,
+): Promise<AuthResponse> => {
   const prisma = getPrisma();
 
-  // Check if email already exists
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     throw Object.assign(new Error("Email already registered"), { status: 409 });
   }
 
-  // If patient role, check patientId uniqueness
   if (role === "patient" && patientId) {
     const existingPatient = await prisma.user.findUnique({
       where: { patientId },
@@ -89,12 +87,12 @@ export async function register(
     token,
     user: toUserResponse(user),
   };
-}
+};
 
-export async function login(
+export const login = async (
   email: string,
-  password: string
-): Promise<AuthResponse> {
+  password: string,
+): Promise<AuthResponse> => {
   const prisma = getPrisma();
 
   const user = await prisma.user.findUnique({ where: { email } });
@@ -117,7 +115,7 @@ export async function login(
     token,
     user: toUserResponse(user),
   };
-}
+};
 
 export async function getMe(userId: string) {
   const prisma = getPrisma();
@@ -130,6 +128,6 @@ export async function getMe(userId: string) {
   return toUserResponse(user);
 }
 
-export function verifyToken(token: string): JwtPayload {
+export const verifyToken = (token: string): JwtPayload => {
   return jwt.verify(token, env.JWT_SECRET) as JwtPayload;
-}
+};

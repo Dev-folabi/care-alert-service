@@ -1,7 +1,7 @@
-import IORedis from "ioredis";
-import { env } from "./env.js";
+import Redis from "ioredis";
+import { env } from "./env";
 
-let redisInstance: IORedis.Redis | null = null;
+let redisInstance: Redis | null = null;
 
 const redisConnectionOptions = {
   maxRetriesPerRequest: null as null,
@@ -10,9 +10,9 @@ const redisConnectionOptions = {
 
 // Shared Redis instance for general use (caching, idempotency, etc.)
 
-export function getRedis(): IORedis.Redis {
+export function getRedis(): Redis {
   if (!redisInstance) {
-    redisInstance = new IORedis.default(env.REDIS_URL, {
+    redisInstance = new Redis(env.REDIS_URL, {
       ...redisConnectionOptions,
       retryStrategy(times: number) {
         const delay = Math.min(times * 200, 5000);

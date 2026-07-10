@@ -1,25 +1,13 @@
 import { eventBus } from "../events/bus.js";
 import { getIO } from "./gateway.js";
 
-/**
- * Register event bus listeners that relay alerts to connected clients
- * via Socket.io in real-time.
- *
- * Event flow:
- *   BullMQ Worker → eventBus.emit("alert:created") → this handler → socket.emit("alert:new")
- *   BullMQ Worker → eventBus.emit("alert:suppressed") → this handler → socket.emit("alert:suppressed")
- *
- * Targeting:
- *   - Clinicians in the "clinicians" room receive ALL alerts
- *   - Patients in the "patient:{patientId}" room receive ONLY their own alerts
- */
-export function registerSocketHandlers(): void {
+export const registerSocketHandlers = () => {
   const io = getIO();
 
-  // ── Alert created → push to relevant rooms ──
+  // Alert created → push to relevant rooms
   eventBus.onEvent("alert:created", (payload) => {
     console.log(
-      `📡 Pushing alert:created to rooms (alert: ${payload.alertId}, patient: ${payload.patientId})`
+      `Pushing alert:created to rooms (alert: ${payload.alertId}, patient: ${payload.patientId})`,
     );
 
     // Push to all clinicians
@@ -41,10 +29,10 @@ export function registerSocketHandlers(): void {
     });
   });
 
-  // ── Alert suppressed → push batch notification ──
+  // Alert suppressed → push batch notification
   eventBus.onEvent("alert:suppressed", (payload) => {
     console.log(
-      `📡 Pushing alert:suppressed to rooms (alert: ${payload.alertId}, patient: ${payload.patientId}, suppressedCount: ${payload.suppressedCount})`
+      `Pushing alert:suppressed to rooms (alert: ${payload.alertId}, patient: ${payload.patientId}, suppressedCount: ${payload.suppressedCount})`,
     );
 
     // Push to all clinicians
@@ -68,5 +56,5 @@ export function registerSocketHandlers(): void {
     });
   });
 
-  console.log("✅ Socket event handlers registered");
-}
+  console.log("Socket event handlers registered");
+};

@@ -1,25 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { computeHmac, safeCompare, verifyHmacSignature } from "../utils/crypto.js";
-import { hmacGuard } from "./hmac.js";
-import { env } from "../config/env.js";
+import { computeHmac, safeCompare, verifyHmacSignature } from "../utils/crypto";
+import { hmacGuard } from "./hmac";
+import { env } from "../config/env";
 
-// ────────────────────────────────────────────────────────
-// What we're testing and why:
-//
-// HMAC signature verification is the FIRST security boundary
-// for the webhook endpoint. If this fails, unauthenticated
-// parties could inject fake alerts into the clinical system.
-//
-// We test:
-// 1. Correct signature → passes (next called)
-// 2. Invalid signature → rejected (401)
-// 3. Missing signature header → rejected (401)
-// 4. Tampered body → rejected (401)
-// 5. Wrong secret → rejected (401)
-// 6. Malformed signature format → rejected (401)
-// ────────────────────────────────────────────────────────
-
-// Use the actual configured secret (loaded from env at module time)
+// Load secret from env
 const SECRET = env.WEBHOOK_SECRET;
 
 function createMockReq(overrides: Record<string, any> = {}) {
@@ -115,7 +99,9 @@ describe("Crypto Utilities", () => {
 
     it("should return false for an invalid signature", () => {
       const body = '{"test":"payload"}';
-      expect(verifyHmacSignature(body, SECRET, "sha256=invalidhex")).toBe(false);
+      expect(verifyHmacSignature(body, SECRET, "sha256=invalidhex")).toBe(
+        false,
+      );
     });
 
     it("should return false when body is tampered", () => {
@@ -148,7 +134,8 @@ describe("Crypto Utilities", () => {
 
 describe("HMAC Middleware", () => {
   it("should call next() for a valid signature", () => {
-    const body = '{"eventId":"evt-1","deviceId":"D1","patientId":"PT-1","severity":"high","message":"Test","triggeredAt":"2025-01-01T00:00:00Z"}';
+    const body =
+      '{"eventId":"evt-1","deviceId":"D1","patientId":"PT-1","severity":"high","message":"Test","triggeredAt":"2025-01-01T00:00:00Z"}';
     const hex = computeHmac(body, SECRET);
     const signature = `sha256=${hex}`;
 

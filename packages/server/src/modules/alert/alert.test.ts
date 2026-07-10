@@ -1,29 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { getPrisma } from "../../db/client.js";
-import { getRedis } from "../../config/redis.js";
-import * as alertService from "./alert.service.js";
-import { getCached, setCache, buildPatientCacheKey, invalidatePatientCache } from "./alert.cache.js";
-
-// ────────────────────────────────────────────────────────
-// What we're testing and why:
-//
-// Access control at the API layer is the primary security
-// boundary for patient data. If this breaks, one patient
-// could see another patient's alerts — a HIPAA-level
-// data leak in a real clinical system.
-//
-// We test:
-// 1. Clinician can view all alerts across all patients
-// 2. Patient can view only their own alerts
-// 3. Patient CANNOT view another patient's specific alert → 403
-// 4. Alert not found → 404
-//
-// Also testing cache behavior:
-// 5. Cache miss → DB query → cache set
-// 6. Cache hit → returns cached data
-// 7. Cache invalidation → next read hits DB again
-// 8. TTL is set on cache entries
-// ────────────────────────────────────────────────────────
+import { getPrisma } from "../../db/client";
+import { getRedis } from "../../config/redis";
+import * as alertService from "./alert.service";
+import {
+  getCached,
+  setCache,
+  buildPatientCacheKey,
+  invalidatePatientCache,
+} from "./alert.cache";
 
 const TEST_PATIENT_ID_1 = "PT-AC-TEST-1";
 const TEST_PATIENT_ID_2 = "PT-AC-TEST-2";
@@ -123,7 +107,7 @@ describe("Alert Access Control", () => {
         patient1AlertId,
         clinicianId,
         "CLINICIAN",
-        null
+        null,
       );
 
       expect(alert).not.toBeNull();
@@ -135,7 +119,7 @@ describe("Alert Access Control", () => {
         patient1AlertId,
         patient1Id,
         "PATIENT",
-        TEST_PATIENT_ID_1
+        TEST_PATIENT_ID_1,
       );
 
       expect(alert).not.toBeNull();
@@ -148,7 +132,7 @@ describe("Alert Access Control", () => {
           patient2AlertId,
           patient1Id,
           "PATIENT",
-          TEST_PATIENT_ID_1
+          TEST_PATIENT_ID_1,
         );
         expect.fail("Should have thrown 403");
       } catch (err: any) {
@@ -163,7 +147,7 @@ describe("Alert Access Control", () => {
           "00000000-0000-0000-0000-000000000000",
           clinicianId,
           "CLINICIAN",
-          null
+          null,
         );
         expect.fail("Should have thrown 404");
       } catch (err: any) {
@@ -182,7 +166,7 @@ describe("Alert Access Control", () => {
 
       expect(result.alerts.length).toBeGreaterThan(0);
       const allOwn = result.alerts.every(
-        (a: any) => a.patientId === TEST_PATIENT_ID_1
+        (a: any) => a.patientId === TEST_PATIENT_ID_1,
       );
       expect(allOwn).toBe(true);
     });
@@ -194,7 +178,7 @@ describe("Alert Access Control", () => {
       });
 
       const hasOtherPatient = result.alerts.some(
-        (a: any) => a.patientId === TEST_PATIENT_ID_2
+        (a: any) => a.patientId === TEST_PATIENT_ID_2,
       );
       expect(hasOtherPatient).toBe(false);
     });

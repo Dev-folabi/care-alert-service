@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-// Typed event map for our internal event bus
+// Typed event map for internal event bus
 export interface AlertEvents {
   "alert:created": {
     alertId: string;
@@ -28,18 +28,18 @@ class TypedEventBus extends EventEmitter {
 
   onEvent<K extends keyof EventMap>(
     event: K,
-    listener: (payload: EventMap[K]) => void
+    listener: (payload: EventMap[K]) => void,
   ): this {
     return this.on(event, listener);
   }
 
   offEvent<K extends keyof EventMap>(
     event: K,
-    listener: (payload: EventMap[K]) => void
+    listener: (payload: EventMap[K]) => void,
   ): this {
     return this.off(event, listener);
   }
 }
 
-// Singleton — used to decouple worker from socket gateway
+// Singleton - used to decouple worker from socket gateway
 export const eventBus = new TypedEventBus();

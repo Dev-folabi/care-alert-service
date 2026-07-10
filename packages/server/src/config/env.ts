@@ -1,9 +1,7 @@
 import dotenv from "dotenv";
 import path from "path";
-import { fileURLToPath } from "url";
 
 // Try loading .env from current directory first, then monorepo root
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env") }); // packages/server/.env
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") }); // monorepo root .env
 

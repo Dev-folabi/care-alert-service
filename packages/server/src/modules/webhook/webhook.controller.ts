@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { ingestAlert, WebhookPayload } from "./webhook.service.js";
+import { ingestAlert, WebhookPayload } from "./webhook.service";
 
-export async function ingestHandler(
+export const ingestHandler = async (
   req: Request,
   res: Response,
-  next: NextFunction
-) {
+  next: NextFunction,
+) => {
   try {
     const payload: WebhookPayload = {
       eventId: req.body.eventId,
@@ -17,9 +17,14 @@ export async function ingestHandler(
     };
 
     const result = await ingestAlert(payload);
-
-    res.status(result.status).json(result.data);
+    res
+      .status(result.status)
+      .json({
+        success: true,
+        message: result.data.message,
+        data: result.data.alert,
+      });
   } catch (err) {
     next(err);
   }
-}
+};

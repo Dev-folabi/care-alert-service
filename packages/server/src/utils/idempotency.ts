@@ -6,44 +6,34 @@ const IDEMPOTENCY_PREFIX = "idempotency:";
 const IDEMPOTENCY_TTL_SECONDS = 86400; // 24 hours
 
 /**
- * Check if an event has already been processed (Redis fast path).
- * Returns the cached response if found, null otherwise.
+ * Check if an event has already been processed
  */
-export async function checkIdempotencyKey(
-  eventId: string
-): Promise<string | null> {
+export const checkIdempotencyKey = async (
+  eventId: string,
+): Promise<string | null> => {
   const redis = getRedis();
   const key = `${IDEMPOTENCY_PREFIX}${eventId}`;
   const cached = await redis.get(key);
   return cached;
-}
+};
 
 /**
  * Mark an event as processed in Redis.
- * Stores the response JSON with a 24-hour TTL.
  */
-export async function markIdempotencyKey(
+export const markIdempotencyKey = async (
   eventId: string,
-  response: string
-): Promise<void> {
+  response: string,
+): Promise<void> => {
   const redis = getRedis();
   const key = `${IDEMPOTENCY_PREFIX}${eventId}`;
   await redis.set(key, response, "EX", IDEMPOTENCY_TTL_SECONDS);
-}
+};
 
 /**
  * Dual-layer idempotency check.
- *
- * Layer 1: Redis SET check (fast path)
- *   → eventId exists → return cached response
- *
- * Layer 2: DB unique constraint on eventId (durable fallback)
- *   → If Redis TTL expired or Redis crashed → Prisma insert
- *     throws P2002 unique violation → treat as duplicate
- *
  * @returns { isDuplicate: boolean, existingAlert: any | null }
  */
-export async function handleIdempotency(
+export const handleIdempotency = async (
   eventId: string,
   alertData: {
     eventId: string;
@@ -52,15 +42,15 @@ export async function handleIdempotency(
     severity: string;
     message: string;
     triggeredAt: Date;
-  }
-): Promise<{ isDuplicate: boolean; existingAlert: any | null }> {
-  // Layer 1: Redis check
+  },
+): Promise<{ isDuplicate: boolean; existingAlert: any | null }> => {
+  // Redis check
   const cached = await checkIdempotencyKey(eventId);
   if (cached) {
     return { isDuplicate: true, existingAlert: JSON.parse(cached) };
   }
 
-  // Layer 2: Attempt DB insert — unique constraint on eventId is the safety net
+  // Attempt DB insert
   const prisma = getPrisma();
 
   try {
@@ -79,7 +69,10 @@ export async function handleIdempotency(
     return { isDuplicate: false, existingAlert: alert };
   } catch (err) {
     // Prisma unique constraint violation (P2002)
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
       // Fetch the existing alert
       const existing = await prisma.alert.findUnique({
         where: { eventId },
@@ -95,4 +88,4 @@ export async function handleIdempotency(
 
     throw err;
   }
-}
+};

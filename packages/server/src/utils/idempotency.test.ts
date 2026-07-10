@@ -1,27 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { getPrisma } from "../db/client.js";
-import { getRedis } from "../config/redis.js";
-import { handleIdempotency, checkIdempotencyKey, markIdempotencyKey } from "./idempotency.js";
-
-// ────────────────────────────────────────────────────────
-// What we're testing and why:
-//
-// Idempotency ensures that replayed webhook events don't
-// create duplicate alerts. This is critical because:
-// - Network retries are common in distributed systems
-// - Double-alerting a clinician for the same event is noisy
-//   and could cause alarm fatigue
-//
-// We test the dual-layer approach:
-// Layer 1: Redis fast path (cache hit → return immediately)
-// Layer 2: DB unique constraint (safety net if Redis misses)
-//
-// Key scenarios:
-// 1. First event → processes normally (Redis miss + DB insert)
-// 2. Same eventId again → Redis hit → duplicate detected
-// 3. Redis TTL expired → DB unique constraint catches it
-// 4. Different eventId → processes normally
-// ────────────────────────────────────────────────────────
+import { getPrisma } from "../db/client";
+import { getRedis } from "../config/redis";
+import {
+  handleIdempotency,
+  checkIdempotencyKey,
+  markIdempotencyKey,
+} from "./idempotency";
 
 const TEST_PREFIX = "idempotency-test-";
 
@@ -37,12 +21,13 @@ describe("Idempotency", () => {
       where: { eventId: { startsWith: TEST_PREFIX } },
     });
     await prisma.$disconnect();
-    // Don't quit Redis — it's shared across test suites
   });
 
   describe("checkIdempotencyKey / markIdempotencyKey (Redis Layer 1)", () => {
     it("should return null for a key that has not been seen", async () => {
-      const result = await checkIdempotencyKey(`${TEST_PREFIX}unseen-${Date.now()}`);
+      const result = await checkIdempotencyKey(
+        `${TEST_PREFIX}unseen-${Date.now()}`,
+      );
       expect(result).toBeNull();
     });
 
@@ -60,13 +45,16 @@ describe("Idempotency", () => {
       const eventId = `${TEST_PREFIX}mark-other-${Date.now()}`;
       await markIdempotencyKey(eventId, JSON.stringify({ test: true }));
 
-      const result = await checkIdempotencyKey(`${TEST_PREFIX}nonexistent-${Date.now()}`);
+      const result = await checkIdempotencyKey(
+        `${TEST_PREFIX}nonexistent-${Date.now()}`,
+      );
       expect(result).toBeNull();
     });
   });
 
   describe("handleIdempotency (Dual-Layer)", () => {
-    const uniqueEventId = () => `${TEST_PREFIX}handle-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const uniqueEventId = () =>
+      `${TEST_PREFIX}handle-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
     beforeEach(async () => {
       await prisma.alert.deleteMany({

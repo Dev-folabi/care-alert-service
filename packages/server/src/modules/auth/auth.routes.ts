@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { validateRegister, validateLogin } from "./auth.dto.js";
-import { registerHandler, loginHandler, meHandler } from "./auth.controller.js";
-import { validate } from "../../middleware/validate.js";
-import { authGuard } from "../../middleware/auth.js";
+import { validateRegister, validateLogin } from "./auth.dto";
+import { registerHandler, loginHandler, meHandler } from "./auth.controller";
+import { validate } from "../../middleware/validate";
+import { authGuard } from "../../middleware/auth";
 
 const router = Router();
 
