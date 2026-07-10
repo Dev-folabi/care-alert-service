@@ -162,7 +162,7 @@ describe("HMAC Middleware", () => {
     hmacGuard(req, res, next);
 
     expect(res.statusCode).toBe(401);
-    expect(res.body.error).toMatch(/missing/i);
+    expect(res.body.message).toMatch(/missing/i);
     expect(next.called).toBe(false);
   });
 
@@ -177,7 +177,7 @@ describe("HMAC Middleware", () => {
     hmacGuard(req, res, next);
 
     expect(res.statusCode).toBe(401);
-    expect(res.body.error).toMatch(/invalid/i);
+    expect(res.body.message).toMatch(/invalid/i);
     expect(next.called).toBe(false);
   });
 

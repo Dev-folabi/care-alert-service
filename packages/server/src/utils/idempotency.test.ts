@@ -14,6 +14,21 @@ describe("Idempotency", () => {
 
   beforeAll(async () => {
     prisma = getPrisma();
+    
+    // Create test patients if they don't exist
+    for (const pid of ["PT-001", "PT-002"]) {
+      await prisma.user.upsert({
+        where: { patientId: pid },
+        update: {},
+        create: {
+          email: `test-${pid}@carealert.io`,
+          password: "password123",
+          name: `Test ${pid}`,
+          role: "PATIENT",
+          patientId: pid,
+        },
+      });
+    }
   });
 
   afterAll(async () => {
