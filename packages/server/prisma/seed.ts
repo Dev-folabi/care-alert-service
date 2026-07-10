@@ -1,3 +1,10 @@
+import path from "path";
+import { config as dotenvConfig } from "dotenv";
+
+// Load .env before PrismaClient reads DATABASE_URL
+dotenvConfig({ path: path.resolve(process.cwd(), ".env") });
+dotenvConfig({ path: path.resolve(process.cwd(), "../../.env") }); // monorepo root fallback
+
 import { PrismaClient, Role, Severity, AlertStatus } from "@prisma/client";
 import bcryptjs from "bcryptjs";
 

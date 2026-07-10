@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCard } from "./AlertCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
@@ -25,6 +26,8 @@ export function AlertList({
   filters,
   onFiltersChange,
 }: AlertListProps) {
+  const router = useRouter();
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -75,7 +78,11 @@ export function AlertList({
       ) : (
         <div className="space-y-2">
           {alerts.map((alert) => (
-            <AlertCard key={alert.id} alert={alert} />
+            <AlertCard 
+              key={alert.id} 
+              alert={alert} 
+              onClick={() => router.push(`/dashboard/alert/${alert.id}`)}
+            />
           ))}
         </div>
       )}

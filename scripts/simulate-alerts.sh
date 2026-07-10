@@ -79,15 +79,15 @@ echo "📊 Checking alert statuses..."
 TOKEN=$(curl -s "${API_URL}/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"clinician@carealert.io","password":"password123"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null)
+  | python3 -c "import sys,json; print(json.load(sys.stdin).get('data', {}).get('token',''))" 2>/dev/null)
 
 if [ -n "${TOKEN}" ]; then
   ALERTS=$(curl -s "${API_URL}/api/alerts?patientId=${PATIENT_ID}&limit=20" \
     -H "Authorization: Bearer ${TOKEN}")
 
   echo ""
-  echo "  Active alerts:     $(echo "${ALERTS}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d.get('alerts',[]) if a.get('status')=='ACTIVE']))" 2>/dev/null || echo '?')"
-  echo "  Suppressed alerts: $(echo "${ALERTS}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len([a for a in d.get('alerts',[]) if a.get('status')=='SUPPRESSED']))" 2>/dev/null || echo '?')"
+  echo "  Active alerts:     $(echo "${ALERTS}" | python3 -c "import sys,json; d=json.load(sys.stdin).get('data',{}); print(len([a for a in d.get('alerts',[]) if a.get('status')=='ACTIVE']))" 2>/dev/null || echo '?')"
+  echo "  Suppressed alerts: $(echo "${ALERTS}" | python3 -c "import sys,json; d=json.load(sys.stdin).get('data',{}); print(len([a for a in d.get('alerts',[]) if a.get('status')=='SUPPRESSED']))" 2>/dev/null || echo '?')"
   echo ""
   echo "✅ Simulation complete! Check the dashboard at http://localhost:3000"
 else

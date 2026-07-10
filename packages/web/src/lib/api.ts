@@ -45,10 +45,21 @@ export async function apiFetch<T>(
     throw error;
   }
 
-  return response.json() as Promise<T>;
+  const json = await response.json().catch(() => null);
+
+  if (json && typeof json === "object" && "success" in json) {
+    if (!json.success) {
+      const error = new Error(json.message || `HTTP ${response.status}`);
+      (error as any).status = response.status;
+      (error as any).data = json.data;
+      throw error;
+    }
+    return json.data as T;
+  }
+
+  return json as T;
 }
 
-/** Shorthand methods */
 export const api = {
   get: <T>(path: string, params?: Record<string, string>) =>
     apiFetch<T>(path, { method: "GET", params }),

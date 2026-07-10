@@ -1,9 +1,10 @@
 import dotenv from "dotenv";
 import path from "path";
 
+const rootDir = process.cwd();
 // Try loading .env from current directory first, then monorepo root
-dotenv.config({ path: path.resolve(__dirname, "../../.env") }); // packages/server/.env
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") }); // monorepo root .env
+dotenv.config({ path: path.resolve(rootDir, ".env") }); // packages/server/.env
+dotenv.config({ path: path.resolve(rootDir, "../../.env") }); // monorepo root .env
 
 function required(key: string): string {
   const value = process.env[key];

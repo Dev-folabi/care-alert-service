@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCard } from "./AlertCard";
 import { useSocketStore } from "@/stores/socketStore";
 import type { Alert } from "@/types/alert";
@@ -13,6 +14,7 @@ export function AlertFeed({ alerts }: AlertFeedProps) {
   const [recentAlerts, setRecentAlerts] = useState<Alert[]>([]);
   const isConnected = useSocketStore((s) => s.isConnected);
   const feedRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Take the latest alerts for the live feed (most recent first)
   useEffect(() => {
@@ -45,10 +47,11 @@ export function AlertFeed({ alerts }: AlertFeedProps) {
           </div>
         ) : (
           recentAlerts.map((alert, index) => (
-            <AlertCard
-              key={alert.id}
-              alert={alert}
-              isNew={index === 0}
+            <AlertCard 
+              key={alert.id} 
+              alert={alert} 
+              isNew={index === 0} 
+              onClick={() => router.push(`/dashboard/alert/${alert.id}`)}
             />
           ))
         )}
